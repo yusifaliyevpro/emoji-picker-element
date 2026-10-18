@@ -100,7 +100,12 @@ function patch (expressions, instanceBindings) {
       } else {
         // attribute value is not null; set a new attribute
         const newValue = attributeValuePre + toString(expression) + attributeValuePost
-        targetNode.setAttribute(attributeName, newValue)
+        if (attributeName === 'style') {
+          // CSSOM writes are allowed under a strict CSP that blocks style attributes
+          targetNode.style.cssText = newValue
+        } else {
+          targetNode.setAttribute(attributeName, newValue)
+        }
       }
     } else { // text node / child element / children replacement
       let newNode

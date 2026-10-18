@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { createFramework } from '../../../src/picker/components/Picker/framework.js'
 
 describe('framework', () => {
@@ -261,5 +262,19 @@ describe('framework', () => {
 
     state.name = 'foo'
     expect(render().outerHTML).toBe('<div><div class="foo"></div></div>')
+  })
+
+  // A strict CSP blocks style attributes but not CSSOM writes
+  test('style bindings are set via CSSOM, not setAttribute', () => {
+    const setAttribute = vi.spyOn(Element.prototype, 'setAttribute')
+    const state = { style: 'width: 1px' }
+    const { html } = createFramework(state)
+    const render = () => html`<div style="${state.style}"></div>`
+
+    expect(render().style.width).toBe('1px')
+    state.style = 'width: 2px'
+    expect(render().style.width).toBe('2px')
+    expect(setAttribute).not.toHaveBeenCalledWith('style', expect.anything())
+    setAttribute.mockRestore()
   })
 })
